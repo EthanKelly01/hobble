@@ -32,6 +32,7 @@ statement returns [Expr ret]
 condition returns [Expr ret]
     : x=expression CONDITION y=expression { $ret = new Compare($CONDITION.text, $x.ret, $y.ret); }
     | left=condition ANDOR right=condition { $ret = new ANDOR($left.ret, $ANDOR.text, $right.ret); }
+    | expression { $ret = $expression.ret; }
     ;
 
 assignment returns [Expr ret]
@@ -52,6 +53,7 @@ expression returns [Expr ret]
 //literals
     | NUMBER                                 { $ret = new IntLiteral($NUMBER.text); }
     | STRING                                 { $ret = new StringLiteral($STRING.text); }
+    | BOOLEAN                                { $ret = new BoolLiteral($BOOLEAN.text); }
     | ID                                     { $ret = new Deref($ID.text); }
     ;
 
@@ -64,6 +66,7 @@ OPERATOR : '+' | '-' | '*' | '/';
 CONDITION : '<' | '<=' | '>' | '>=' | '==' | '!=';
 ANDOR : '&&' | '||';
 
+BOOLEAN : 'true' | 'false' | 'TRUE' | 'FALSE';
 NUMBER : [0-9]+;
 STRING : '"' .*? (~('\\') '"');
 ID : [a-zA-Z_] [a-zA-Z0-9_]*;
