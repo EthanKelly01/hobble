@@ -87,6 +87,18 @@ class Compare(val op:String, val left:Expr, val right:Expr):Expr() {
     }
 }
 
+class ANDOR(val left:Expr, val op:String, val right:Expr): Expr() {
+    override fun eval(runtime: Runtime): Data {
+        val x:Data = left.eval(runtime)
+        val y:Data = right.eval(runtime)
+        if (x is BoolData && y is BoolData) return BoolData(when(op) {
+            "&&" -> x.v && y.v
+            "||" -> x.v || y.v
+            else -> { throw Exception("Error comparing conditions"); }
+        }) else throw Exception("Expressions are not conditions")
+    }
+}
+
 class Check(val cond:Expr, val trueExpr:Expr, val falseExpr:Expr):Expr() {
     override fun eval(runtime:Runtime):Data = if((cond.eval(runtime) as BoolData).v) trueExpr.eval(runtime) else falseExpr.eval(runtime)
 }

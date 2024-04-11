@@ -17,8 +17,8 @@ statement returns [Expr ret]
     : assignment ';'?                         { $ret = $assignment.ret; }
     | expression ';'?                         { $ret = $expression.ret; }
 //if statements
-    | { Expr first; Expr second = new NoneExpr(); } 'if''(' left=expression CONDITION right=expression ')' ('{' scope '}' { first = $scope.ret; } | statement { first = $statement.ret; })
-    ('else' ('{' scope '}' { second = $scope.ret; } | statement { second = $statement.ret; }))? { $ret = new Check(new Compare($CONDITION.text, $left.ret, $right.ret), first, second); }
+    | { Expr first; Expr second = new NoneExpr(); } 'if''(' condition ')' ('{' scope '}' { first = $scope.ret; } | statement { first = $statement.ret; })
+    ('else' ('{' scope '}' { second = $scope.ret; } | statement { second = $statement.ret; }))? { $ret = new Check($condition.ret, first, second); }
 //function definitions
     | { List<String> args = new ArrayList<String>(); Expr body; } 'function' ID '(' (first=ID { args.add($first.text); } (',' iter=ID { args.add($iter.text); })*)? ')'
     ('{' scope '}' { body=$scope.ret; } | statement { body=$statement.ret; }) { $ret = new FunDef($ID.text, args, body); }
@@ -29,8 +29,14 @@ statement returns [Expr ret]
     ')' ('{' scope '}' { body.add($scope.ret); } | statement { body.add($statement.ret); }) { body.add(iter); $ret = new Loop(cr, comp, new Block(body)); }
     ;
 
+condition returns [Expr ret]
+    : x=expression CONDITION y=expression { $ret = new Compare($CONDITION.text, $x.ret, $y.ret); }
+    | left=condition ANDOR right=condition { $ret = new ANDOR($left.ret, $ANDOR.text, $right.ret); }
+    ;
+
 assignment returns [Expr ret]
-    : 'let'? ID '=' expression               { $ret = new Assign($ID.text, $expression.ret); } //maybe change ret to statement?
+    : ID '=' expression               { $ret = new Assign($ID.text, $expression.ret); } //maybe change ret to statement?
+    | ID OPERATOR '=' expression             { $ret = new Assign($ID.text, new Arith($OPERATOR.text, new Deref($ID.text), $expression.ret)); }
     | ID MODIFIER                            { $ret = new Assign($ID.text, new Modify(new Deref($ID.text), $MODIFIER.text)); }
     ;
 
@@ -56,6 +62,7 @@ COMMENT : ('/*' .*? '*/' | '//' .*? '\n') -> skip;
 MODIFIER: '++' | '--';
 OPERATOR : '+' | '-' | '*' | '/';
 CONDITION : '<' | '<=' | '>' | '>=' | '==' | '!=';
+ANDOR : '&&' | '||';
 
 NUMBER : [0-9]+;
 STRING : '"' .*? (~('\\') '"');

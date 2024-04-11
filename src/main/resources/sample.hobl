@@ -1,3 +1,1 @@
-loop(x = 0; x < 5; x++) {
-    print(x);
-}
+if (0 < 5 || 5 < 4) print("true");
