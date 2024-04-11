@@ -52,7 +52,7 @@ class Arith(val op:String, val left:Expr, val right:Expr):Expr() {
             "*" -> x.v * y.v
             "/" -> x.v / y.v
             else -> { throw Exception("Invalid operator") }})
-        else if (x is StringData && y is StringData && (op == "++" || op == "+")) return StringData("$x$y")
+        else if (x is StringData && y is StringData && op == "+") return StringData("$x$y")
         else if (x is IntData && y is StringData && op == "*") return StringData(y.v.repeat(x.v))
         else if (x is StringData && y is IntData && op == "*") return StringData(x.v.repeat(y.v))
         throw Exception("Only supports ints and strings")
@@ -63,8 +63,8 @@ class Modify(val myVal:Expr, val op:String):Expr() {
     override fun eval(runtime:Runtime):Data {
         var v = myVal.eval(runtime)
         if (v is IntData) return IntData(when(op) {
-            "+++" -> v.v + 1
-            "---" -> v.v - 1
+            "++" -> v.v + 1
+            "--" -> v.v - 1
             "-" -> - v.v
             else -> { throw Exception("Invalid operator") }})
         throw Exception("Only supports ints so far, work in progress")

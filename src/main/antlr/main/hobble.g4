@@ -24,7 +24,7 @@ statement returns [Expr ret]
     ('{' scope '}' { body=$scope.ret; } | statement { body=$statement.ret; }) { $ret = new FunDef($ID.text, args, body); }
 //loop
     | { Expr cr = new NoneExpr(); Expr comp = new NoneExpr(); Expr iter = new NoneExpr(); List<Expr> body = new ArrayList<Expr>(); }
-    'for' '(' ((statement { cr=$statement.ret; })? left=expression CONDITION right=expression (';' assignment { iter=$assignment.ret; })? { comp=new Compare($CONDITION.text, $left.ret, $right.ret); }
+    'loop' '(' ((statement { cr=$statement.ret; })? left=expression CONDITION right=expression (';' assignment { iter=$assignment.ret; })? { comp=new Compare($CONDITION.text, $left.ret, $right.ret); }
     | ID 'in' f=expression '..' s=expression { cr = new Assign($ID.text, $f.ret); comp = new Compare("<=", new Deref($ID.text), $s.ret); iter = new Assign($ID.text, new Modify(new Deref($ID.text), "+++")); })
     ')' ('{' scope '}' { body.add($scope.ret); } | statement { body.add($statement.ret); }) { body.add(iter); $ret = new Loop(cr, comp, new Block(body)); }
     ;
@@ -53,8 +53,8 @@ expression returns [Expr ret]
 
 COMMENT : ('/*' .*? '*/' | '//' .*? '\n') -> skip;
 
-MODIFIER: '+++' | '---';
-OPERATOR : '+' | '-' | '*' | '/' | '++';
+MODIFIER: '++' | '--';
+OPERATOR : '+' | '-' | '*' | '/';
 CONDITION : '<' | '<=' | '>' | '>=' | '==' | '!=';
 
 NUMBER : [0-9]+;
