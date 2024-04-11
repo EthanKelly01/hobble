@@ -1,1 +1,2 @@
-if (true) print("true");
+x = true;
+print(x > 1);

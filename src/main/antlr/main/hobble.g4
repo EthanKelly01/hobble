@@ -49,7 +49,9 @@ expression returns [Expr ret]
 //arithmetic
     | OPERATOR expression                    { $ret = new Modify($expression.ret, "-"); }
     | x=expression OPERATOR y=expression     { $ret = new Arith($OPERATOR.text, $x.ret, $y.ret); }
-    | 'print(' expression ')'                { $ret = new Print($expression.ret); }
+    | '!' expression                         { $ret = new Invert($expression.ret); }
+    | 'print' '(' expression ')'             { $ret = new Print($expression.ret); }
+    | 'print' '(' condition ')'              { $ret = new Print($condition.ret); }
 //literals
     | NUMBER                                 { $ret = new IntLiteral($NUMBER.text); }
     | STRING                                 { $ret = new StringLiteral($STRING.text); }

@@ -48,8 +48,10 @@ class Print(val output:Expr):Expr() {
 
 class Arith(val op:String, val left:Expr, val right:Expr):Expr() {
     override fun eval(runtime:Runtime):Data {
-        val x = left.eval(runtime)
-        val y = right.eval(runtime)
+        var x = left.eval(runtime)
+        var y = right.eval(runtime)
+        if (x is BoolData) x = x.toInt()
+        if (y is BoolData) y = y.toInt()
         if (x is IntData && y is IntData) return IntData(when(op) {
             "+" -> x.v + y.v
             "-" -> x.v - y.v
@@ -66,6 +68,7 @@ class Arith(val op:String, val left:Expr, val right:Expr):Expr() {
 class Modify(val myVal:Expr, val op:String):Expr() {
     override fun eval(runtime:Runtime):Data {
         var v = myVal.eval(runtime)
+        if (v is BoolData) v = v.toInt()
         if (v is IntData) return IntData(when(op) {
             "++" -> v.v + 1
             "--" -> v.v - 1
@@ -77,8 +80,10 @@ class Modify(val myVal:Expr, val op:String):Expr() {
 
 class Compare(val op:String, val left:Expr, val right:Expr):Expr() {
     override fun eval(runtime:Runtime):Data {
-        val x:Data = left.eval(runtime)
-        val y:Data = right.eval(runtime)
+        var x:Data = left.eval(runtime)
+        var y:Data = right.eval(runtime)
+        if (x is BoolData) x = x.toInt()
+        if (y is BoolData) y = y.toInt()
         if(x is IntData && y is IntData) return BoolData(when(op) {
             "<" -> x.v < y.v
             "<=" -> x.v <= y.v
@@ -93,13 +98,24 @@ class Compare(val op:String, val left:Expr, val right:Expr):Expr() {
 
 class ANDOR(val left:Expr, val op:String, val right:Expr): Expr() {
     override fun eval(runtime: Runtime): Data {
-        val x:Data = left.eval(runtime)
-        val y:Data = right.eval(runtime)
+        var x:Data = left.eval(runtime)
+        var y:Data = right.eval(runtime)
+        if (x is IntData) x = x.toBool()
+        if (y is IntData) y = y.toBool()
         if (x is BoolData && y is BoolData) return BoolData(when(op) {
             "&&" -> x.v && y.v
             "||" -> x.v || y.v
             else -> { throw Exception("Error comparing conditions"); }
         }) else throw Exception("Expressions are not conditions")
+    }
+}
+
+class Invert(val bool:Expr):Expr() {
+    override fun eval(runtime: Runtime): Data {
+        var x = bool.eval(runtime)
+        if (x is IntData) x = x.toBool()
+        if (x !is BoolData) throw Exception("Tried to invert a non-boolean")
+        return BoolData(!x.v)
     }
 }
 
@@ -128,8 +144,7 @@ class FunDef(val name:String, val args:List<String>, val body:Expr):Expr() {
 
 class FunCall(val name:String, val args:List<Expr>):Expr() {
     override fun eval(runtime:Runtime):Data {
-        val f = runtime.symbolTable[name]
-        if (f == null) throw Exception("Function not found")
+        val f = runtime.symbolTable[name] ?: throw Exception("Function not found")
         if (f !is FuncData) throw Exception("$name is not a function")
         if (args.size != f.args.size) throw Exception("$name expects ${f.args.size} arguments, but ${args.size} given.")
 
