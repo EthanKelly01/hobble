@@ -17,7 +17,7 @@ class StringLiteral(val lexeme:String):Expr() {
 }
 
 class BoolLiteral(val lexeme:String):Expr() {
-    override fun eval(runtime: Runtime): Data = if (lexeme == "true" || lexeme == "TRUE") BoolData(true) else BoolData(false)
+    override fun eval(runtime: Runtime): Data = if (lexeme.uppercase() == "TRUE") BoolData(true) else BoolData(false)
 }
 
 //-------- Handling Variables --------

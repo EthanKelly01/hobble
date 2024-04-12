@@ -68,7 +68,7 @@ OPERATOR : '+' | '-' | '*' | '/';
 CONDITION : '<' | '<=' | '>' | '>=' | '==' | '!=';
 ANDOR : '&&' | '||';
 
-BOOLEAN : 'true' | 'false' | 'TRUE' | 'FALSE';
+BOOLEAN : ('T'|'t') ('R'|'r') ('U'|'u') ('E'|'e') | ('F'|'f') ('A'|'a') ('L'|'l') ('S'|'s') ('E'|'e');
 NUMBER : [0-9]+;
 STRING : '"' .*? (~('\\') '"');
 ID : [a-zA-Z_] [a-zA-Z0-9_]*;
