@@ -10,13 +10,13 @@ program returns [Expr ret] : scope EOF { $ret = $scope.ret; };
 scope returns [Expr ret]
     : { List<Expr> statements = new ArrayList<Expr>(); }
     (statement { statements.add($statement.ret); })*
-    { $ret = new Block(statements); }
+    { $ret = new Block(statements, false); }
     ;
 
 funcScope returns [Expr ret]
     : { List<Expr> statements = new ArrayList<Expr>(); }
     (statement { statements.add($statement.ret); })*
-    { $ret = new FuncBlock(statements); }
+    { $ret = new Block(statements, true); }
     ;
 
 statement returns [Expr ret]

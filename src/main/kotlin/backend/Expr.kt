@@ -22,21 +22,11 @@ class BoolLiteral(val lexeme:String):Expr() {
 
 //-------- Handling Variables --------
 
-class Block(val exprs:List<Expr>):Expr() {
+class Block(val exprs:List<Expr>, val flag:Boolean = false):Expr() {
     override fun eval(runtime:Runtime):Data {
         for (expr in exprs) {
             val data = expr.eval(runtime);
-            if (data is InterruptData) return data
-        }
-        return None;
-    }
-}
-
-class FuncBlock(val exprs:List<Expr>):Expr() {
-    override fun eval(runtime:Runtime):Data {
-        for (expr in exprs) {
-            val data = expr.eval(runtime);
-            if (data is InterruptData && data.flag == 0) return data
+            if (data is InterruptData) if (!flag || data.flag == 0) return data
         }
         return None;
     }
@@ -181,6 +171,6 @@ class FunCall(val name:String, val args:List<Expr>):Expr() {
     }
 }
 
-class Interrupt(val flag:Int, val v: Expr):Expr() {
+class Interrupt(val flag:Int = 0, val v: Expr = NoneExpr()):Expr() {
     override fun eval(runtime:Runtime):Data = InterruptData(flag, v)
 }

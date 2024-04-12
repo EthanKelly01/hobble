@@ -3,10 +3,8 @@ package main
 import org.antlr.v4.runtime.*
 import backend.*
 
-private fun readSampleFile(source:String): org.antlr.v4.runtime.CharStream? {
-    val contextClassLoader = Thread.currentThread().contextClassLoader
-    return contextClassLoader.getResourceAsStream(source).use {
-        input -> CharStreams.fromStream(input) }
+private fun readSampleFile(source:String): CharStream? {
+    return Thread.currentThread().contextClassLoader.getResourceAsStream(source).use { input -> CharStreams.fromStream(input) }
 }
 
 private fun execute(source:String) {
