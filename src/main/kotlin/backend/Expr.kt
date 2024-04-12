@@ -26,8 +26,17 @@ class Block(val exprs:List<Expr>):Expr() {
     override fun eval(runtime:Runtime):Data {
         for (expr in exprs) {
             val data = expr.eval(runtime);
-            //if (data is ReturnData) return data.v.eval(runtime)
-            if (data is ReturnData) return data
+            if (data is InterruptData) return data
+        }
+        return None;
+    }
+}
+
+class FuncBlock(val exprs:List<Expr>):Expr() {
+    override fun eval(runtime:Runtime):Data {
+        for (expr in exprs) {
+            val data = expr.eval(runtime);
+            if (data is InterruptData && data.flag == 0) return data
         }
         return None;
     }
@@ -136,13 +145,17 @@ class Check(val cond:Expr, val trueExpr:Expr, val falseExpr:Expr):Expr() {
 
 //-------- Loops --------
 
-class Loop(val creation:Expr, val cond:Expr, val body:Expr, val doo:Boolean):Expr() {
+class Loop(val creation:Expr, val cond:Expr, val body:Expr, val iter:Expr, val doo:Boolean):Expr() {
     override fun eval(runtime:Runtime):Data {
         if (doo) body.eval(runtime)
         creation.eval(runtime);
         while((cond.eval(runtime) as BoolData).v) {
             val ret:Data = body.eval(runtime)
-            if (ret is ReturnData) return ret
+            if (ret is InterruptData) {
+                if (ret.flag == 0) return ret
+                if (ret.flag == 1) break
+            }
+            iter.eval(runtime);
         }
         return None
     }
@@ -163,15 +176,11 @@ class FunCall(val name:String, val args:List<Expr>):Expr() {
         if (f !is FuncData) throw Exception("$name is not a function")
         if (args.size != f.args.size) throw Exception("$name expects ${f.args.size} arguments, but ${args.size} given.")
 
-        val argsData = args.map { it.eval(runtime) }
-        val ret = f.body.eval(runtime.copy(f.args.zip(argsData).toMap()))
-        return if (ret is ReturnData) ret.v.eval(runtime) else ret
+        val ret = f.body.eval(runtime.copy(f.args.zip(args.map { it.eval(runtime) }).toMap()))
+        return if (ret is InterruptData) ret.eval(runtime) else ret
     }
 }
 
-//return
-class Return(val v:Expr):Expr() {
-    override fun eval(runtime: Runtime): Data {
-        return ReturnData(v)
-    }
+class Interrupt(val flag:Int, val v: Expr):Expr() {
+    override fun eval(runtime:Runtime):Data = InterruptData(flag, v)
 }

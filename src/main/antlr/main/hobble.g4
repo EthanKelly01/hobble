@@ -13,6 +13,12 @@ scope returns [Expr ret]
     { $ret = new Block(statements); }
     ;
 
+funcScope returns [Expr ret]
+    : { List<Expr> statements = new ArrayList<Expr>(); }
+    (statement { statements.add($statement.ret); })*
+    { $ret = new FuncBlock(statements); }
+    ;
+
 statement returns [Expr ret]
     : assignment ';'?                         { $ret = $assignment.ret; }
     | expression ';'?                         { $ret = $expression.ret; }
@@ -21,12 +27,12 @@ statement returns [Expr ret]
     ('else' ('{' scope '}' { second = $scope.ret; } | statement { second = $statement.ret; }))? { $ret = new Check($condition.ret, first, second); }
 //function definitions
     | { List<String> args = new ArrayList<String>(); Expr body; } FUNCTION ID '(' (first=ID { args.add($first.text); } (',' iter=ID { args.add($iter.text); })*)? ')'
-    ('{' scope '}' { body=$scope.ret; } | statement { body=$statement.ret; }) { $ret = new FunDef($ID.text, args, body); }
+    ('{' funcScope '}' { body=$funcScope.ret; } | statement { body=$statement.ret; }) { $ret = new FunDef($ID.text, args, body); }
 //loop
-    | { Expr cr = new NoneExpr(); Expr comp = new NoneExpr(); Expr iter = new NoneExpr(); List<Expr> body = new ArrayList<Expr>(); boolean doo = false; }
+    | { Expr cr = new NoneExpr(); Expr comp = new NoneExpr(); Expr iter = new NoneExpr(); Expr body = new NoneExpr(); boolean doo = false; }
     ('do' { doo = true; })? '(' ((statement { cr=$statement.ret; })? left=expression CONDITION right=expression (';' assignment { iter=$assignment.ret; })? { comp=new Compare($CONDITION.text, $left.ret, $right.ret); }
     | ID 'in' f=expression '..' s=expression { cr = new Assign($ID.text, $f.ret); comp = new Compare("<=", new Deref($ID.text), $s.ret); iter = new Assign($ID.text, new Modify(new Deref($ID.text), "+++")); })
-    ')' ('{' scope '}' { body.add($scope.ret); } | statement { body.add($statement.ret); }) { body.add(iter); $ret = new Loop(cr, comp, new Block(body), doo); }
+    ')' ('{' scope '}' { body = $scope.ret; } | statement { body = $statement.ret; }) { $ret = new Loop(cr, comp, body, iter, doo); }
     ;
 
 condition returns [Expr ret]
@@ -53,12 +59,21 @@ expression returns [Expr ret]
     | '!' expression                         { $ret = new Invert($expression.ret); }
     | 'print' '(' condition ')'              { $ret = new Print($condition.ret); }
 //literals
-    | NUMBER                                 { $ret = new IntLiteral($NUMBER.text); }
+    | interrupt                              { $ret = $interrupt.ret; }
+    | value                                  { $ret = $value.ret; }
+    ;
+
+interrupt returns [Expr ret]
+    : { Expr expr = new NoneExpr(); } 'return' (expression {expr = $expression.ret; })? { $ret = new Interrupt(0, expr); }
+    | 'break' { $ret = new Interrupt(1, new NoneExpr()); }
+    | 'continue' { $ret = new Interrupt(2, new NoneExpr()); }
+    ;
+
+value returns [Expr ret]
+    : NUMBER                                 { $ret = new IntLiteral($NUMBER.text); }
     | STRING                                 { $ret = new StringLiteral($STRING.text); }
     | BOOLEAN                                { $ret = new BoolLiteral($BOOLEAN.text); }
     | ID                                     { $ret = new Deref($ID.text); }
-//return
-    | { Expr expr = new NoneExpr(); } 'return' (expression {expr = $expression.ret; })? { $ret = new Return(expr); }
     ;
 
 //-------- Lexer --------
