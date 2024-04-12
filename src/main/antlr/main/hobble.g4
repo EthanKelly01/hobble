@@ -71,6 +71,7 @@ interrupt returns [Expr ret]
 
 value returns [Expr ret]
     : NUMBER                                 { $ret = new IntLiteral($NUMBER.text); }
+    | FLOAT                                  { $ret = new FloatLiteral($FLOAT.text); }
     | STRING                                 { $ret = new StringLiteral($STRING.text); }
     | BOOLEAN                                { $ret = new BoolLiteral($BOOLEAN.text); }
     | ID                                     { $ret = new Deref($ID.text); }
@@ -89,6 +90,7 @@ FUNCTION : 'f'('u'('n'('c'('t'('i'('o'('n')?)?)?)?)?)?)?;
 BOOLEAN : ('T'|'t') ('R'|'r') ('U'|'u') ('E'|'e') | ('F'|'f') ('A'|'a') ('L'|'l') ('S'|'s') ('E'|'e');
 
 NUMBER : [0-9]+;
+FLOAT: ('0'..'9') + ('.' ('0'..'9')+)?;
 STRING : '"' ( '\\"' | ~'"' )* '"';
 ID : [a-zA-Z_] [a-zA-Z0-9_]*;
 

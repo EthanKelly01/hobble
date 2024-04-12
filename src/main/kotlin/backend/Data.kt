@@ -12,6 +12,10 @@ class IntData(val v:Int): Data() {
     fun toBool() = if (v > 0) BoolData(true) else BoolData(false)
 }
 
+class FloatData(val v: Float): Data() {
+    override fun toString() = "$v"
+}
+
 class StringData(val v:String): Data() {
     override fun toString() = "$v"
 }

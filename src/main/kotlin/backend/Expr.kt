@@ -12,6 +12,10 @@ class IntLiteral(val lexeme:String):Expr() {
     override fun eval(runtime:Runtime):Data = IntData(Integer.parseInt(lexeme))
 }
 
+class FloatLiteral(val lexeme:String):Expr() {
+    override fun eval(runtime:Runtime): Data = FloatData(lexeme.toFloat())
+}
+
 class StringLiteral(val lexeme:String):Expr() {
     override fun eval(runtime:Runtime):Data = if (lexeme != "" && lexeme[0] == '"' && lexeme[lexeme.length-1] == '"') StringData(lexeme.substring(1, lexeme.length-1)) else StringData(lexeme)
 }
@@ -64,6 +68,7 @@ class Arith(val op:String, val left:Expr, val right:Expr):Expr() {
             "*" -> x.v * y.v
             "/" -> x.v / y.v
             else -> { throw Exception("Invalid operator") }})
+
         else if (x is StringData && y is StringData && op == "+") return StringData("$x$y")
         else if (x is IntData && y is StringData && op == "*") return StringData(y.v.repeat(x.v))
         else if (x is StringData && y is IntData && op == "*") return StringData(x.v.repeat(y.v))
