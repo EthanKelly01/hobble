@@ -32,7 +32,7 @@ statement returns [Expr ret]
 condition returns [Expr ret]
     : x=expression CONDITION y=expression { $ret = new Compare($CONDITION.text, $x.ret, $y.ret); }
     | left=condition ANDOR right=condition { $ret = new ANDOR($left.ret, $ANDOR.text, $right.ret); }
-    | expression { $ret = $expression.ret; }
+    | expression { $ret = $expression.ret; } //for int/bool literals???
     ;
 
 assignment returns [Expr ret]
@@ -51,7 +51,6 @@ expression returns [Expr ret]
     | OPERATOR expression                    { $ret = new Modify($expression.ret, "-"); }
     | x=expression OPERATOR y=expression     { $ret = new Arith($OPERATOR.text, $x.ret, $y.ret); }
     | '!' expression                         { $ret = new Invert($expression.ret); }
-    | 'print' '(' expression ')'             { $ret = new Print($expression.ret); }
     | 'print' '(' condition ')'              { $ret = new Print($condition.ret); }
 //literals
     | NUMBER                                 { $ret = new IntLiteral($NUMBER.text); }
@@ -64,7 +63,7 @@ expression returns [Expr ret]
 
 //-------- Lexer --------
 
-COMMENT : ('/*' .*? '*/' | '//' .*? '\n') -> skip;
+COMMENT : ('/*' .*? '*/' | '//' ~[\r\n]*) -> skip;
 
 MODIFIER: '++' | '--';
 OPERATOR : '+' | '-' | '*' | '/';
@@ -72,8 +71,8 @@ CONDITION : '<' | '<=' | '>' | '>=' | '==' | '!=';
 ANDOR : '&&' | '||';
 
 FUNCTION : 'f'('u'('n'('c'('t'('i'('o'('n')?)?)?)?)?)?)?;
-
 BOOLEAN : ('T'|'t') ('R'|'r') ('U'|'u') ('E'|'e') | ('F'|'f') ('A'|'a') ('L'|'l') ('S'|'s') ('E'|'e');
+
 NUMBER : [0-9]+;
 STRING : '"' .*? (~('\\') '"');
 ID : [a-zA-Z_] [a-zA-Z0-9_]*;

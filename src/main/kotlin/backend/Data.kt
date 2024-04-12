@@ -27,4 +27,5 @@ class FuncData(val name:String, val args:List<String>, val body:Expr): Data() {
 
 class ReturnData(val v:Expr): Data() {
     override fun toString() = "error/return"
+    fun eval(runtime:Runtime):Data = v.eval(runtime)
 }

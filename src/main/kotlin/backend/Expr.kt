@@ -26,7 +26,8 @@ class Block(val exprs:List<Expr>):Expr() {
     override fun eval(runtime:Runtime):Data {
         for (expr in exprs) {
             val data = expr.eval(runtime);
-            if (data is ReturnData) return data.v.eval(runtime)
+            //if (data is ReturnData) return data.v.eval(runtime)
+            if (data is ReturnData) return data
         }
         return None;
     }
@@ -126,7 +127,11 @@ class Invert(val bool:Expr):Expr() {
 }
 
 class Check(val cond:Expr, val trueExpr:Expr, val falseExpr:Expr):Expr() {
-    override fun eval(runtime:Runtime):Data = if((cond.eval(runtime) as BoolData).v) trueExpr.eval(runtime) else falseExpr.eval(runtime)
+    override fun eval(runtime:Runtime):Data {
+        var result = cond.eval(runtime)
+        if (result is IntData) result = result.toBool()
+        return if(result is BoolData && result.v) trueExpr.eval(runtime) else falseExpr.eval(runtime)
+    }
 }
 
 //-------- Loops --------
@@ -135,7 +140,10 @@ class Loop(val creation:Expr, val cond:Expr, val body:Expr, val doo:Boolean):Exp
     override fun eval(runtime:Runtime):Data {
         if (doo) body.eval(runtime)
         creation.eval(runtime);
-        while((cond.eval(runtime) as BoolData).v) body.eval(runtime)
+        while((cond.eval(runtime) as BoolData).v) {
+            val ret:Data = body.eval(runtime)
+            if (ret is ReturnData) return ret
+        }
         return None
     }
 }
@@ -156,7 +164,8 @@ class FunCall(val name:String, val args:List<Expr>):Expr() {
         if (args.size != f.args.size) throw Exception("$name expects ${f.args.size} arguments, but ${args.size} given.")
 
         val argsData = args.map { it.eval(runtime) }
-        return f.body.eval(runtime.copy(f.args.zip(argsData).toMap()))
+        val ret = f.body.eval(runtime.copy(f.args.zip(argsData).toMap()))
+        return if (ret is ReturnData) ret.v.eval(runtime) else ret
     }
 }
 

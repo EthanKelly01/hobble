@@ -1,5 +1,25 @@
-function bruh(x) {
-    if (x==4) return 20;
-    print("test");
+function test1() {
+    return 1;
 }
-print(bruh(4));
+
+function test2() {
+    x = 10;
+    if (x == 10) return 2;
+}
+
+function test3() {
+    x = 10;
+    if (x == 10) { return 3; }
+}
+
+function test4() {
+    (x=0;x<10;x++) {
+        print(".");
+        if (x==5) return 4;
+    }
+}
+
+print(test1());
+print(test2());
+print(test3());
+print(test4());
