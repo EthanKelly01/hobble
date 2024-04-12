@@ -68,11 +68,25 @@ class Arith(val op:String, val left:Expr, val right:Expr):Expr() {
             "*" -> x.v * y.v
             "/" -> x.v / y.v
             else -> { throw Exception("Invalid operator") }})
-
-        else if (x is StringData && y is StringData && op == "+") return StringData("$x$y")
-        else if (x is IntData && y is StringData && op == "*") return StringData(y.v.repeat(x.v))
-        else if (x is StringData && y is IntData && op == "*") return StringData(x.v.repeat(y.v))
-        throw Exception("Only supports ints and strings")
+        if (x is StringData && y is StringData) {
+            if (op == "/") {
+                var newStr = x.v
+                for (i in y.v) newStr = newStr.replace(i.toString(), "")
+                return StringData(newStr)
+            }
+            return StringData(when(op) {
+                "+" -> "$x$y"
+                else -> { throw Exception("Invalid operator") }
+            })
+        }
+        if (x is IntData && y is StringData) x = y.also { y = x }
+        if (x is StringData && y is IntData) return StringData(when(op) {
+            "*" -> x.v.repeat((y as IntData).v)
+            "/" -> x.v.substring(0, x.v.length / (y as IntData).v)
+            "-" -> if ((y as IntData).v < x.v.length) x.v.substring(0, x.v.length - (y as IntData).v) else ""
+            "+" -> "$x$y"
+            else -> { throw Exception("Invalid operator") }})
+        throw Exception("Only supports bools, ints, and strings")
     }
 }
 
