@@ -74,7 +74,7 @@ FUNCTION : 'f'('u'('n'('c'('t'('i'('o'('n')?)?)?)?)?)?)?;
 BOOLEAN : ('T'|'t') ('R'|'r') ('U'|'u') ('E'|'e') | ('F'|'f') ('A'|'a') ('L'|'l') ('S'|'s') ('E'|'e');
 
 NUMBER : [0-9]+;
-STRING : '"' .*? (~('\\') '"');
+STRING : '"' ( '\\"' | ~'"' )* '"';
 ID : [a-zA-Z_] [a-zA-Z0-9_]*;
 
 WHITESPACE : [ \t\r\n] -> skip;
