@@ -125,8 +125,9 @@ class Check(val cond:Expr, val trueExpr:Expr, val falseExpr:Expr):Expr() {
 
 //-------- Loops --------
 
-class Loop(val creation:Expr, val cond:Expr, val body:Expr):Expr() {
+class Loop(val creation:Expr, val cond:Expr, val body:Expr, val doo:Boolean):Expr() {
     override fun eval(runtime:Runtime):Data {
+        if (doo) body.eval(runtime)
         creation.eval(runtime);
         while((cond.eval(runtime) as BoolData).v) body.eval(runtime)
         return None

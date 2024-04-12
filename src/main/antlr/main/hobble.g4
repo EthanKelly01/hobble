@@ -23,10 +23,10 @@ statement returns [Expr ret]
     | { List<String> args = new ArrayList<String>(); Expr body; } 'function' ID '(' (first=ID { args.add($first.text); } (',' iter=ID { args.add($iter.text); })*)? ')'
     ('{' scope '}' { body=$scope.ret; } | statement { body=$statement.ret; }) { $ret = new FunDef($ID.text, args, body); }
 //loop
-    | { Expr cr = new NoneExpr(); Expr comp = new NoneExpr(); Expr iter = new NoneExpr(); List<Expr> body = new ArrayList<Expr>(); }
-    'loop' '(' ((statement { cr=$statement.ret; })? left=expression CONDITION right=expression (';' assignment { iter=$assignment.ret; })? { comp=new Compare($CONDITION.text, $left.ret, $right.ret); }
+    | { Expr cr = new NoneExpr(); Expr comp = new NoneExpr(); Expr iter = new NoneExpr(); List<Expr> body = new ArrayList<Expr>(); boolean doo = false; }
+    ('do' { doo = true; })? '(' ((statement { cr=$statement.ret; })? left=expression CONDITION right=expression (';' assignment { iter=$assignment.ret; })? { comp=new Compare($CONDITION.text, $left.ret, $right.ret); }
     | ID 'in' f=expression '..' s=expression { cr = new Assign($ID.text, $f.ret); comp = new Compare("<=", new Deref($ID.text), $s.ret); iter = new Assign($ID.text, new Modify(new Deref($ID.text), "+++")); })
-    ')' ('{' scope '}' { body.add($scope.ret); } | statement { body.add($statement.ret); }) { body.add(iter); $ret = new Loop(cr, comp, new Block(body)); }
+    ')' ('{' scope '}' { body.add($scope.ret); } | statement { body.add($statement.ret); }) { body.add(iter); $ret = new Loop(cr, comp, new Block(body), doo); }
     ;
 
 condition returns [Expr ret]

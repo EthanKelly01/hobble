@@ -1,2 +1,2 @@
-x = true;
-print(x > 1);
+x=4;
+do (x<3;x++) print(x);
