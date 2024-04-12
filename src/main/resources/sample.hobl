@@ -1,2 +1,5 @@
-x=4;
-do (x<3;x++) print(x);
+function bruh(x) {
+    if (x==4) return 20;
+    print("test");
+}
+print(bruh(4));

@@ -23,7 +23,13 @@ class BoolLiteral(val lexeme:String):Expr() {
 //-------- Handling Variables --------
 
 class Block(val exprs:List<Expr>):Expr() {
-    override fun eval(runtime:Runtime):Data = exprs.map { it.eval(runtime) }.last()
+    override fun eval(runtime:Runtime):Data {
+        for (expr in exprs) {
+            val data = expr.eval(runtime);
+            if (data is ReturnData) return data.v.eval(runtime)
+        }
+        return None;
+    }
 }
 
 class Assign(val name:String, val expr:Expr):Expr() {
@@ -151,5 +157,12 @@ class FunCall(val name:String, val args:List<Expr>):Expr() {
 
         val argsData = args.map { it.eval(runtime) }
         return f.body.eval(runtime.copy(f.args.zip(argsData).toMap()))
+    }
+}
+
+//return
+class Return(val v:Expr):Expr() {
+    override fun eval(runtime: Runtime): Data {
+        return ReturnData(v)
     }
 }

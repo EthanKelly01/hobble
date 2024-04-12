@@ -18,8 +18,5 @@ class Runtime() {
         return newRuntime
     }
 
-    override fun toString():String =
-        symbolTable.map {
-                entry -> "${entry.key} = ${entry.value}"
-        }.joinToString("; ")
+    override fun toString():String = symbolTable.map { entry -> "${entry.key} = ${entry.value}" }.joinToString("; ")
 }

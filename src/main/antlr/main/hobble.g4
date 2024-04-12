@@ -20,7 +20,7 @@ statement returns [Expr ret]
     | { Expr first; Expr second = new NoneExpr(); } 'if''(' condition ')' ('{' scope '}' { first = $scope.ret; } | statement { first = $statement.ret; })
     ('else' ('{' scope '}' { second = $scope.ret; } | statement { second = $statement.ret; }))? { $ret = new Check($condition.ret, first, second); }
 //function definitions
-    | { List<String> args = new ArrayList<String>(); Expr body; } 'function' ID '(' (first=ID { args.add($first.text); } (',' iter=ID { args.add($iter.text); })*)? ')'
+    | { List<String> args = new ArrayList<String>(); Expr body; } FUNCTION ID '(' (first=ID { args.add($first.text); } (',' iter=ID { args.add($iter.text); })*)? ')'
     ('{' scope '}' { body=$scope.ret; } | statement { body=$statement.ret; }) { $ret = new FunDef($ID.text, args, body); }
 //loop
     | { Expr cr = new NoneExpr(); Expr comp = new NoneExpr(); Expr iter = new NoneExpr(); List<Expr> body = new ArrayList<Expr>(); boolean doo = false; }
@@ -36,9 +36,10 @@ condition returns [Expr ret]
     ;
 
 assignment returns [Expr ret]
-    : ID '=' expression               { $ret = new Assign($ID.text, $expression.ret); } //maybe change ret to statement?
+    : ID '=' expression                      { $ret = new Assign($ID.text, $expression.ret); } //maybe change ret to statement?
     | ID OPERATOR '=' expression             { $ret = new Assign($ID.text, new Arith($OPERATOR.text, new Deref($ID.text), $expression.ret)); }
     | ID MODIFIER                            { $ret = new Assign($ID.text, new Modify(new Deref($ID.text), $MODIFIER.text)); }
+    | '!' ID                                 { $ret = new Assign($ID.text, new Invert(new Deref($ID.text))); }
     ;
 
 expression returns [Expr ret]
@@ -57,6 +58,8 @@ expression returns [Expr ret]
     | STRING                                 { $ret = new StringLiteral($STRING.text); }
     | BOOLEAN                                { $ret = new BoolLiteral($BOOLEAN.text); }
     | ID                                     { $ret = new Deref($ID.text); }
+//return
+    | { Expr expr = new NoneExpr(); } 'return' (expression {expr = $expression.ret; })? { $ret = new Return(expr); }
     ;
 
 //-------- Lexer --------
@@ -67,6 +70,8 @@ MODIFIER: '++' | '--';
 OPERATOR : '+' | '-' | '*' | '/';
 CONDITION : '<' | '<=' | '>' | '>=' | '==' | '!=';
 ANDOR : '&&' | '||';
+
+FUNCTION : 'f'('u'('n'('c'('t'('i'('o'('n')?)?)?)?)?)?)?;
 
 BOOLEAN : ('T'|'t') ('R'|'r') ('U'|'u') ('E'|'e') | ('F'|'f') ('A'|'a') ('L'|'l') ('S'|'s') ('E'|'e');
 NUMBER : [0-9]+;

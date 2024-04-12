@@ -24,3 +24,7 @@ class BoolData(val v:Boolean): Data() {
 class FuncData(val name:String, val args:List<String>, val body:Expr): Data() {
     override fun toString() = "Function: $name ($args);"
 }
+
+class ReturnData(val v:Expr): Data() {
+    override fun toString() = "error/return"
+}
