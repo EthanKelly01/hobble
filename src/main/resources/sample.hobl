@@ -1,4 +1,8 @@
 x=4
-//const(x)
+const(x)
 x = 8
+print(x)
+deconst(x)
+print(x)
+x=(8)
 print(x)

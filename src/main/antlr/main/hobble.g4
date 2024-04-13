@@ -62,6 +62,8 @@ expression returns [Expr ret]
     | '!' expression                         { $ret = new Invert($expression.ret); }
     | 'print' '(' condition ')'              { $ret = new Print($condition.ret); }
 	| 'const' '(' ID ')'					 { $ret = new Const(new Deref($ID.text)); }
+	| 'deconst' '(' ID ')'					 { $ret = new Deconst(new Deref($ID.text)); }
+
 //literals
     | interrupt                              { $ret = $interrupt.ret; }
     | value                                  { $ret = $value.ret; }

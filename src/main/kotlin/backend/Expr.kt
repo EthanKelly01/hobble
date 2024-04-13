@@ -47,7 +47,8 @@ class Block(val exprs:List<Expr>, val flag:Boolean = false):Expr() {
 class Assign(val name:String, val expr:Expr):Expr() {
     override fun eval(runtime:Runtime):Data {
         if ((runtime.symbolTable[name]?.isConst == true)) {
-            throw Exception("$name is const")
+            return None
+            //throw Exception("$name is const")
         }
         runtime.symbolTable.put(name, expr.eval(runtime))
         return None
@@ -68,6 +69,13 @@ class Print(val output:Expr):Expr() {
 class Const(val name:Expr):Expr() {
     override fun eval(runtime:Runtime):Data {
         (name.eval(runtime) as Data).isConst = true
+        return None
+    }
+}
+
+class Deconst(val name:Expr):Expr() {
+    override fun eval(runtime:Runtime):Data {
+        (name.eval(runtime) as Data).isConst = false
         return None
     }
 }
