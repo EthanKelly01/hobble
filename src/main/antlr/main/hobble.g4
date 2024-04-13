@@ -61,6 +61,7 @@ expression returns [Expr ret]
     | x=expression OPERATOR y=expression     { $ret = new Arith($OPERATOR.text, $x.ret, $y.ret); }
     | '!' expression                         { $ret = new Invert($expression.ret); }
     | 'print' '(' condition ')'              { $ret = new Print($condition.ret); }
+	| 'const' '(' ID ')'					 { $ret = new Const(new Deref($ID.text)); }
 //literals
     | interrupt                              { $ret = $interrupt.ret; }
     | value                                  { $ret = $value.ret; }

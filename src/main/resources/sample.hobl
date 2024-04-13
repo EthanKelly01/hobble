@@ -1,8 +1,4 @@
 x=4
-would{
-    print("true")
-    if() print("also true")
-}
-if() else print("false")
-
-() print("test")
+//const(x)
+x = 8
+print(x)
