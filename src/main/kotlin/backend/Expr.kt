@@ -1,5 +1,8 @@
 package backend
 
+import kotlin.math.pow
+import kotlin.math.sqrt
+
 abstract class Expr {
     abstract fun eval(runtime:Runtime):Data
 }
@@ -58,48 +61,47 @@ class Print(val output:Expr):Expr() {
 
 class Arith(val op:String, val left:Expr, val right:Expr):Expr() {
     override fun eval(runtime:Runtime):Data {
-        var x = left.eval(runtime)
-        var y = right.eval(runtime)
-        if (x is BoolData) x = x.toInt()
-        if (y is BoolData) y = y.toInt()
-        if (x is IntData) x = x.toFloat()
-        if (y is IntData) y = y.toFloat()
+        var x:Data = Normalize(left).eval(runtime)
+        var y:Data = Normalize(right).eval(runtime)
         if (x is FloatData && y is FloatData) return FloatData(when(op) {
             "+" -> x.v + y.v
             "-" -> x.v - y.v
             "*" -> x.v * y.v
             "/" -> x.v / y.v
+            "**" -> x.v.pow(y.v)
+            "%" -> x.v % y.v
+            "/=" -> y.v.pow(1/x.v)
             else -> { throw Exception("Invalid operator") }})
         if (x is StringData && y is StringData) {
-            if (op == "/") {
-                var newStr = x.v
-                for (i in y.v) newStr = newStr.replace(i.toString(), "")
-                return StringData(newStr)
-            }
             return StringData(when(op) {
                 "+" -> "$x$y"
+                "/" -> {
+                    var newStr = x.v
+                    for (i in y.v) newStr = newStr.replace(i.toString(), "")
+                    return StringData(newStr)
+                }
                 else -> { throw Exception("Invalid operator") }
             })
         }
         if (x is FloatData && y is StringData) x = y.also { y = x }
         if (x is StringData && y is FloatData) return StringData(when(op) {
+            "+" -> "$x$y"
+            "-" -> if ((y as FloatData).toInt().v < x.v.length) x.v.substring(0, x.v.length - (y as FloatData).toInt().v) else ""
             "*" -> x.v.repeat((y as FloatData).toInt().v)
             "/" -> x.v.substring(0, x.v.length / (y as FloatData).toInt().v)
-            "-" -> if ((y as FloatData).toInt().v < x.v.length) x.v.substring(0, x.v.length - (y as FloatData).toInt().v) else ""
-            "+" -> "$x$y"
             else -> { throw Exception("Invalid operator") }})
-        throw Exception("Only supports bools, ints, and strings")
+        throw Exception("Only supports bools, ints, floats, and strings")
     }
 }
 
 class Modify(val myVal:Expr, val op:String):Expr() {
     override fun eval(runtime:Runtime):Data {
-        var v = myVal.eval(runtime)
-        if (v is BoolData) v = v.toInt()
-        if (v is IntData) return IntData(when(op) {
+        var v = Normalize(myVal).eval(runtime)
+        if (v is FloatData) return FloatData(when(op) {
             "++" -> v.v + 1
             "--" -> v.v - 1
             "-" -> - v.v
+            "/-" -> sqrt(v.v)
             else -> { throw Exception("Invalid operator") }})
         throw Exception("Only supports ints so far, work in progress")
     }
@@ -107,12 +109,8 @@ class Modify(val myVal:Expr, val op:String):Expr() {
 
 class Compare(val op:String, val left:Expr, val right:Expr):Expr() {
     override fun eval(runtime:Runtime):Data {
-        var x:Data = left.eval(runtime)
-        var y:Data = right.eval(runtime)
-        if (x is BoolData) x = x.toInt()
-        if (y is BoolData) y = y.toInt()
-        if (x is IntData) x = x.toFloat()
-        if (y is IntData) y = y.toFloat()
+        val x:Data = Normalize(left).eval(runtime)
+        val y:Data = Normalize(right).eval(runtime)
         if(x is FloatData && y is FloatData) return BoolData(when(op) {
             "<" -> x.v < y.v
             "<=" -> x.v <= y.v
@@ -121,7 +119,11 @@ class Compare(val op:String, val left:Expr, val right:Expr):Expr() {
             "==" -> x.v == y.v
             "!=" -> x.v != y.v
             else -> { throw Exception("Invalid operator") }})
-        else throw Exception("Cannot perform comparison")
+        if (x is StringData && y is StringData) return BoolData(when(op) {
+            "==" -> x.v == y.v
+            "!=" -> x.v != y.v
+            else -> { throw Exception("Invalid operator") }})
+        throw Exception("Cannot perform comparison")
     }
 }
 

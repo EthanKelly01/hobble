@@ -1,8 +1,7 @@
-x = 3.14
-print(x)
-print(x*2)
-print(3*x)
+x = 4;
+if (x > 0) print(true);
 
-print("yeet"*4);
+function myFunc(x) { print("bruh") }
 
-print(1>4.2)
+myFunc(10);
+print(1+5);

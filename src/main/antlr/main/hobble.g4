@@ -81,8 +81,8 @@ value returns [Expr ret]
 
 COMMENT : ('/*' .*? '*/' | '//' ~[\r\n]*) -> skip;
 
-MODIFIER: '++' | '--';
-OPERATOR : '+' | '-' | '*' | '/';
+MODIFIER: '++' | '--' | '/-';
+OPERATOR : '+' | '-' | '*' | '/' | '**' | '%' | MODIFIER;
 CONDITION : '<' | '<=' | '>' | '>=' | '==' | '!=';
 ANDOR : '&&' | '||';
 
