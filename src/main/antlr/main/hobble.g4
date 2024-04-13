@@ -25,6 +25,9 @@ statement returns [Expr ret]
 //if statements
     | { Expr first; Expr second = new NoneExpr(); } 'if''(' condition ')' ('{' scope '}' { first = $scope.ret; } | statement { first = $statement.ret; })
     ('else' ('{' scope '}' { second = $scope.ret; } | statement { second = $statement.ret; }))? { $ret = new Check($condition.ret, first, second); }
+//would statement
+    | { Expr first; Expr second = new NoneExpr(); } 'would' ('{'scope'}' { first = $scope.ret; } | statement { first = $statement.ret; }) 'if' '(' condition ')'
+    ('else' ('{' scope '}' { second = $scope.ret; } | statement { second = $statement.ret; }))? { $ret = new Check($condition.ret, first, second); }
 //function definitions
     | { List<String> args = new ArrayList<String>(); Expr body; } FUNCTION ID '(' (first=ID { args.add($first.text); } (',' iter=ID { args.add($iter.text); })*)? ')'
     ('{' funcScope '}' { body=$funcScope.ret; } | statement { body=$statement.ret; }) { $ret = new FunDef($ID.text, args, body); }
