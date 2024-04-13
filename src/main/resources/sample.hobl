@@ -1,6 +1,8 @@
 x=4
 would{
     print("true")
-    if(x>3) print("also true")
+    if() print("also true")
 }
-if(x>2) else print("false")
+if() else print("false")
+
+() print("test")

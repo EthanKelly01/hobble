@@ -1,5 +1,6 @@
 package backend
 
+import java.util.*
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -25,6 +26,10 @@ class StringLiteral(val lexeme:String):Expr() {
 
 class BoolLiteral(val lexeme:String):Expr() {
     override fun eval(runtime: Runtime): Data = if (lexeme.uppercase() == "TRUE") BoolData(true) else BoolData(false)
+}
+
+class BoolRandom():Expr() {
+    override fun eval(runtime:Runtime):Data = BoolData(Random().nextBoolean())
 }
 
 //-------- Handling Variables --------

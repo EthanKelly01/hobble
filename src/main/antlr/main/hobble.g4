@@ -23,17 +23,17 @@ statement returns [Expr ret]
     : assignment ';'?                         { $ret = $assignment.ret; }
     | expression ';'?                         { $ret = $expression.ret; }
 //if statements
-    | { Expr first; Expr second = new NoneExpr(); } 'if''(' condition ')' ('{' scope '}' { first = $scope.ret; } | statement { first = $statement.ret; })
-    ('else' ('{' scope '}' { second = $scope.ret; } | statement { second = $statement.ret; }))? { $ret = new Check($condition.ret, first, second); }
+    | { Expr first; Expr second = new NoneExpr(); Expr cond = new BoolRandom(); } 'if''(' (condition { cond = $condition.ret; })? ')' ('{' scope '}' { first = $scope.ret; } | statement { first = $statement.ret; })
+    ('else' ('{' scope '}' { second = $scope.ret; } | statement { second = $statement.ret; }))? { $ret = new Check(cond, first, second); }
 //would statement
-    | { Expr first; Expr second = new NoneExpr(); } 'would' ('{'scope'}' { first = $scope.ret; } | statement { first = $statement.ret; }) 'if' '(' condition ')'
-    ('else' ('{' scope '}' { second = $scope.ret; } | statement { second = $statement.ret; }))? { $ret = new Check($condition.ret, first, second); }
+    | { Expr first; Expr second = new NoneExpr(); Expr cond = new BoolRandom(); } 'would' ('{'scope'}' { first = $scope.ret; } | statement { first = $statement.ret; }) 'if' '(' (condition { cond = $condition.ret; })? ')'
+    ('else' ('{' scope '}' { second = $scope.ret; } | statement { second = $statement.ret; }))? { $ret = new Check(cond, first, second); }
 //function definitions
     | { List<String> args = new ArrayList<String>(); Expr body; } FUNCTION ID '(' (first=ID { args.add($first.text); } (',' iter=ID { args.add($iter.text); })*)? ')'
     ('{' funcScope '}' { body=$funcScope.ret; } | statement { body=$statement.ret; }) { $ret = new FunDef($ID.text, args, body); }
 //loop
-    | { Expr cr = new NoneExpr(); Expr comp = new NoneExpr(); Expr iter = new NoneExpr(); Expr body = new NoneExpr(); boolean doo = false; }
-    ('do' { doo = true; })? '(' ((statement { cr=$statement.ret; })? left=expression CONDITION right=expression (';' assignment { iter=$assignment.ret; })? { comp=new Compare($CONDITION.text, $left.ret, $right.ret); }
+    | { Expr cr = new NoneExpr(); Expr comp = new BoolRandom(); Expr iter = new NoneExpr(); Expr body = new NoneExpr(); boolean doo = false; }
+    ('do' { doo = true; })? '(' ((statement { cr=$statement.ret; })? (condition { comp=$condition.ret; })? (';' assignment { iter=$assignment.ret; })?
     | ID 'in' f=expression '..' s=expression { cr = new Assign($ID.text, $f.ret); comp = new Compare("<=", new Deref($ID.text), $s.ret); iter = new Assign($ID.text, new Modify(new Deref($ID.text), "+++")); })
     ')' ('{' scope '}' { body = $scope.ret; } | statement { body = $statement.ret; }) { $ret = new Loop(cr, comp, body, iter, doo); }
     ;
