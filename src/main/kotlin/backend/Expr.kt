@@ -29,10 +29,10 @@ class BoolLiteral(val lexeme:String):Expr() {
 class Block(val exprs:List<Expr>, val flag:Boolean = false):Expr() {
     override fun eval(runtime:Runtime):Data {
         for (expr in exprs) {
-            val data = expr.eval(runtime);
+            val data = expr.eval(runtime)
             if (data is InterruptData) if (!flag || data.flag == 0) return data
         }
-        return None;
+        return None
     }
 }
 
@@ -62,7 +62,9 @@ class Arith(val op:String, val left:Expr, val right:Expr):Expr() {
         var y = right.eval(runtime)
         if (x is BoolData) x = x.toInt()
         if (y is BoolData) y = y.toInt()
-        if (x is IntData && y is IntData) return IntData(when(op) {
+        if (x is IntData) x = x.toFloat()
+        if (y is IntData) y = y.toFloat()
+        if (x is FloatData && y is FloatData) return FloatData(when(op) {
             "+" -> x.v + y.v
             "-" -> x.v - y.v
             "*" -> x.v * y.v
@@ -79,11 +81,11 @@ class Arith(val op:String, val left:Expr, val right:Expr):Expr() {
                 else -> { throw Exception("Invalid operator") }
             })
         }
-        if (x is IntData && y is StringData) x = y.also { y = x }
-        if (x is StringData && y is IntData) return StringData(when(op) {
-            "*" -> x.v.repeat((y as IntData).v)
-            "/" -> x.v.substring(0, x.v.length / (y as IntData).v)
-            "-" -> if ((y as IntData).v < x.v.length) x.v.substring(0, x.v.length - (y as IntData).v) else ""
+        if (x is FloatData && y is StringData) x = y.also { y = x }
+        if (x is StringData && y is FloatData) return StringData(when(op) {
+            "*" -> x.v.repeat((y as FloatData).toInt().v)
+            "/" -> x.v.substring(0, x.v.length / (y as FloatData).toInt().v)
+            "-" -> if ((y as FloatData).toInt().v < x.v.length) x.v.substring(0, x.v.length - (y as FloatData).toInt().v) else ""
             "+" -> "$x$y"
             else -> { throw Exception("Invalid operator") }})
         throw Exception("Only supports bools, ints, and strings")
@@ -109,7 +111,9 @@ class Compare(val op:String, val left:Expr, val right:Expr):Expr() {
         var y:Data = right.eval(runtime)
         if (x is BoolData) x = x.toInt()
         if (y is BoolData) y = y.toInt()
-        if(x is IntData && y is IntData) return BoolData(when(op) {
+        if (x is IntData) x = x.toFloat()
+        if (y is IntData) y = y.toFloat()
+        if(x is FloatData && y is FloatData) return BoolData(when(op) {
             "<" -> x.v < y.v
             "<=" -> x.v <= y.v
             ">" -> x.v > y.v
@@ -130,7 +134,7 @@ class ANDOR(val left:Expr, val op:String, val right:Expr): Expr() {
         if (x is BoolData && y is BoolData) return BoolData(when(op) {
             "&&" -> x.v && y.v
             "||" -> x.v || y.v
-            else -> { throw Exception("Error comparing conditions"); }
+            else -> { throw Exception("Error comparing conditions") }
         }) else throw Exception("Expressions are not conditions")
     }
 }
@@ -157,14 +161,14 @@ class Check(val cond:Expr, val trueExpr:Expr, val falseExpr:Expr):Expr() {
 class Loop(val creation:Expr, val cond:Expr, val body:Expr, val iter:Expr, val doo:Boolean):Expr() {
     override fun eval(runtime:Runtime):Data {
         if (doo) body.eval(runtime)
-        creation.eval(runtime);
+        creation.eval(runtime)
         while((cond.eval(runtime) as BoolData).v) {
             val ret:Data = body.eval(runtime)
             if (ret is InterruptData) {
                 if (ret.flag == 0) return ret
                 if (ret.flag == 1) break
             }
-            iter.eval(runtime);
+            iter.eval(runtime)
         }
         return None
     }

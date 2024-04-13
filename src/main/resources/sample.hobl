@@ -1,1 +1,8 @@
-print("bruhhhhhh"/"ru");
+x = 3.14
+print(x)
+print(x*2)
+print(3*x)
+
+print("yeet"*4);
+
+print(1>4.2)
