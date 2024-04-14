@@ -29,6 +29,11 @@ class BoolData(val v:Boolean): Data() {
 
 class FuncData(val name:String, val args:List<String>, val body:Expr): Data() {
     override fun toString() = "Function: $name ($args);"
+    var const_instance: FuncCallData? = null
+}
+
+class FuncCallData(val name:String, val args:List<Expr>): Data() {
+    override fun toString() = "Function: $name ($args)"
 }
 
 class InterruptData(val flag:Int, val v:Expr):Data() {

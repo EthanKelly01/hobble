@@ -66,9 +66,14 @@ class Print(val output:Expr):Expr() {
     }
 }
 
-class Const(val name:Expr):Expr() {
+class Const(val name:Expr, val args:List<Expr>?):Expr() {
     override fun eval(runtime:Runtime):Data {
-        (name.eval(runtime) as Data).isConst = true
+        val v = name.eval(runtime) as Data
+        v.isConst = true
+        if (v is FuncData) {
+            v.const_instance = FuncCallData(v.name, args!!)
+        }
+        println(name);
         return None
     }
 }
@@ -212,6 +217,10 @@ class FunCall(val name:String, val args:List<Expr>):Expr() {
     override fun eval(runtime:Runtime):Data {
         val f = runtime.symbolTable[name] ?: throw Exception("Function not found")
         if (f !is FuncData) throw Exception("$name is not a function")
+        if (f.isConst) { //check if function is const. if const, run the stored one instead
+            val ret = f.body.eval(runtime.copy(f.args.zip(f.const_instance!!.args.map { it.eval(runtime) }).toMap()))
+            return if (ret is InterruptData) ret.eval(runtime) else ret
+        }
         if (args.size != f.args.size) throw Exception("$name expects ${f.args.size} arguments, but ${args.size} given.")
 
         val ret = f.body.eval(runtime.copy(f.args.zip(args.map { it.eval(runtime) }).toMap()))

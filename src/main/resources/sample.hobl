@@ -3,6 +3,16 @@ const(x)
 x = 8
 print(x)
 deconst(x)
-print(x)
 x=(8)
 print(x)
+
+fun somefunc(var){
+	print(var)
+}
+
+somefunc(x)
+const(somefunc(x+2))
+somefunc("yeet")
+somefunc("yeet")
+deconst(somefunc)
+somefunc("yeet")
