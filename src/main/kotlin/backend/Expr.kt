@@ -73,7 +73,6 @@ class Const(val name:Expr, val args:List<Expr>?):Expr() {
         if (v is FuncData) {
             v.const_instance = FuncCallData(v.name, args!!)
         }
-        println(name);
         return None
     }
 }
