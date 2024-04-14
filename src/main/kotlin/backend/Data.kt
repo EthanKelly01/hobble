@@ -14,7 +14,7 @@ class IntData(val v:Int, ): Data() {
 }
 
 class FloatData(val v: Float): Data() {
-    override fun toString() = "$v"
+    override fun toString() = if ("$v".takeLast(2) == ".0") v.toInt().toString() else "$v"
     fun toInt() = IntData(v.toInt())
 }
 
