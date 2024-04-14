@@ -34,7 +34,7 @@ statement returns [Expr ret]
 //loop
     | { Expr cr = new NoneExpr(); Expr comp = new BoolRandom(); Expr iter = new NoneExpr(); Expr body = new NoneExpr(); boolean doo = false; }
     ('do' { doo = true; })? '(' ((statement { cr=$statement.ret; })? (condition { comp=$condition.ret; })? (';' assignment { iter=$assignment.ret; })?
-    | ID 'in' f=expression '..' s=expression { cr = new Assign($ID.text, $f.ret); comp = new Compare("<=", new Deref($ID.text), $s.ret); iter = new Assign($ID.text, new Modify(new Deref($ID.text), "+++")); })
+    | ID 'in' f=expression '..' s=expression { cr = new Assign($ID.text, $f.ret); comp = new RangeBuilder(new Deref($ID.text), $f.ret, $s.ret); iter = new IterBuilder($ID.text, $f.ret, $s.ret); })
     ')' ('{' scope '}' { body = $scope.ret; } | statement { body = $statement.ret; }) { $ret = new Loop(cr, comp, body, iter, doo); }
     ;
 
@@ -67,6 +67,7 @@ expression returns [Expr ret]
     | x=expression OPERATOR y=expression     { $ret = new Arith($OPERATOR.text, $x.ret, $y.ret); }
     | '!' expression                         { $ret = new Invert($expression.ret); }
     | 'print' '(' condition ')'              { $ret = new Print($condition.ret); }
+    | 'print' '(' assignment ')'             { $ret = new Print($assignment.ret); }
 //literals
     | interrupt                              { $ret = $interrupt.ret; }
     | value                                  { $ret = $value.ret; }

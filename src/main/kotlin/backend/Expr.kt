@@ -51,7 +51,7 @@ class Assign(val name:String, val expr:Expr):Expr() {
             //throw Exception("$name is const")
         }
         runtime.symbolTable.put(name, expr.eval(runtime))
-        return None
+        return runtime.symbolTable[name] ?: None
     }
 }
 
@@ -98,7 +98,7 @@ class Arith(val op:String, val left:Expr, val right:Expr):Expr() {
             "**" -> x.v.pow(y.v)
             "%" -> x.v % y.v
             "/=" -> y.v.pow(1/x.v)
-            else -> { throw Exception("Invalid operator") }})
+            else -> { throw Exception("Compiler error: Invalid operator / float arith") }})
         if (x is StringData && y is StringData) {
             return StringData(when(op) {
                 "+" -> "$x$y"
@@ -107,7 +107,7 @@ class Arith(val op:String, val left:Expr, val right:Expr):Expr() {
                     for (i in y.v) newStr = newStr.replace(i.toString(), "")
                     return StringData(newStr)
                 }
-                else -> { throw Exception("Invalid operator") }
+                else -> { throw Exception("Compiler error: Invalid operator / string arith") }
             })
         }
         if (x is FloatData && y is StringData) x = y.also { y = x }
@@ -116,7 +116,7 @@ class Arith(val op:String, val left:Expr, val right:Expr):Expr() {
             "-" -> if ((y as FloatData).toInt().v < x.v.length) x.v.substring(0, x.v.length - (y as FloatData).toInt().v) else ""
             "*" -> x.v.repeat((y as FloatData).toInt().v)
             "/" -> x.v.substring(0, x.v.length / (y as FloatData).toInt().v)
-            else -> { throw Exception("Invalid operator") }})
+            else -> { throw Exception("Compiler error: Invalid operator / float/string arith") }})
         throw Exception("Only supports bools, ints, floats, and strings")
     }
 }
@@ -129,7 +129,7 @@ class Modify(val myVal:Expr, val op:String):Expr() {
             "--" -> v.v - 1
             "-" -> - v.v
             "/-" -> sqrt(v.v)
-            else -> { throw Exception("Invalid operator") }})
+            else -> { throw Exception("Compiler error: Invalid operator / modify") }})
         throw Exception("Only supports ints so far, work in progress")
     }
 }
@@ -145,11 +145,11 @@ class Compare(val op:String, val left:Expr, val right:Expr):Expr() {
             ">=" -> x.v >= y.v
             "==" -> x.v == y.v
             "!=" -> x.v != y.v
-            else -> { throw Exception("Invalid operator") }})
+            else -> { throw Exception("Compiler error: Invalid operator / float comparison") }})
         if (x is StringData && y is StringData) return BoolData(when(op) {
             "==" -> x.v == y.v
             "!=" -> x.v != y.v
-            else -> { throw Exception("Invalid operator") }})
+            else -> { throw Exception("Compiler error: Invalid operator / string comparison") }})
         throw Exception("Cannot perform comparison")
     }
 }
@@ -189,16 +189,44 @@ class Check(val cond:Expr, val trueExpr:Expr, val falseExpr:Expr):Expr() {
 
 class Loop(val creation:Expr, val cond:Expr, val body:Expr, val iter:Expr, val doo:Boolean):Expr() {
     override fun eval(runtime:Runtime):Data {
-        if (doo) body.eval(runtime)
         creation.eval(runtime)
-        while((cond.eval(runtime) as BoolData).v) {
+        if (doo) body.eval(runtime)
+        var condition = cond.eval(runtime)
+        if (condition is ExprData) condition = condition.eval(runtime)
+        if (condition is BoolData && condition.v) while(true) {
             val ret:Data = body.eval(runtime)
             if (ret is InterruptData) {
                 if (ret.flag == 0) return ret
                 if (ret.flag == 1) break
             }
-            iter.eval(runtime)
+            val iteration = iter.eval(runtime)
+            if (iteration is ExprData) iteration.eval(runtime)
+            condition = cond.eval(runtime)
+            if (condition is ExprData) condition = condition.eval(runtime)
+            if (condition is BoolData && !condition.v) break
         }
+        return None
+    }
+}
+
+class RangeBuilder(val v:Expr, val first:Expr, val second:Expr):Expr() {
+    override fun eval(runtime:Runtime):Data {
+        val x = Normalize(first).eval(runtime)
+        val y = Normalize(second).eval(runtime)
+        if (x is FloatData && y is FloatData)
+            return ExprData(if (x.v <= y.v) Compare("<=", v, second) else Compare(">=", v, second))
+        println("Compiler error: Not a valid range! Switching to random.")
+        return ExprData(BoolRandom())
+    }
+}
+
+class IterBuilder(val name:String, val first: Expr, val second: Expr):Expr() {
+    override fun eval(runtime:Runtime):Data {
+        val x = Normalize(first).eval(runtime)
+        val y = Normalize(second).eval(runtime)
+        if (x is FloatData && y is FloatData)
+            return ExprData(if (x.v <= y.v) Assign(name, Modify(Deref(name), "++")) else Assign(name, Modify(Deref(name), "--")))
+        println("Compiler error: Not a valid range! Can't iterate.")
         return None
     }
 }

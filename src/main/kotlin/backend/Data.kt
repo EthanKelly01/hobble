@@ -36,6 +36,11 @@ class FuncCallData(val name:String, val args:List<Expr>): Data() {
     override fun toString() = "Function: $name ($args)"
 }
 
+class ExprData(val v:Expr):Data() {
+    override fun toString() = "Should fill this in later"
+    fun eval(runtime:Runtime):Data = v.eval(runtime)
+}
+
 class InterruptData(val flag:Int, val v:Expr):Data() {
     override fun toString() = "error/interrupt"
     fun eval(runtime:Runtime):Data = v.eval(runtime)
