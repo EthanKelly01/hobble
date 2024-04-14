@@ -97,7 +97,7 @@ class Arith(val op:String, val left:Expr, val right:Expr):Expr() {
             "/" -> x.v / y.v
             "**" -> x.v.pow(y.v)
             "%" -> x.v % y.v
-            "/=" -> y.v.pow(1/x.v)
+            "/-" -> y.v.pow(1/x.v)
             else -> { throw Exception("Compiler error: Invalid operator / float arith") }})
         if (x is StringData && y is StringData) {
             return StringData(when(op) {
@@ -130,7 +130,7 @@ class Modify(val myVal:Expr, val op:String):Expr() {
             "-" -> - v.v
             "/-" -> sqrt(v.v)
             else -> { throw Exception("Compiler error: Invalid operator / modify") }})
-        throw Exception("Only supports ints so far, work in progress")
+        throw Exception("Only supports numbers so far, work in progress")
     }
 }
 

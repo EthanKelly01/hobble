@@ -1,18 +1,5 @@
-x=4
-const(x)
-x = 8
-print(x)
-deconst(x)
-x=(8)
-print(x)
-
-fun somefunc(var){
-	print(var)
-}
-
-somefunc(x)
-const(somefunc(x+2))
-somefunc("yeet")
-somefunc("yeet")
-deconst(somefunc)
-somefunc("yeet")
+x=4;
+x+=2;
+print(x);
+print("test");
+print("bruh");

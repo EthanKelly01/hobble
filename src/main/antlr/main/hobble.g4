@@ -5,7 +5,7 @@ import backend.*;
 }
 
 //parser
-program returns [Expr ret] : scope EOF { $ret = $scope.ret; };
+program returns [Expr ret] : scope { $ret = $scope.ret; } EOF;
 
 scope returns [Expr ret]
     : { List<Expr> statements = new ArrayList<Expr>(); }
@@ -53,17 +53,16 @@ assignment returns [Expr ret]
 
 expression returns [Expr ret]
     : '(' expression ')'                     { $ret = $expression.ret; }
-
 //function call
     | { List<Expr> args = new ArrayList<Expr>(); } ID '(' (first=expression { args.add($first.ret); }
     (',' iter=expression { args.add($iter.ret); })*)? ')' { $ret = new FunCall($ID.text, args); }
 //const
-	| 'const' '(' ((ID { $ret = new Const(new Deref($ID.text), null); }) | (
-	{ List<Expr> args = new ArrayList<Expr>(); } ID '(' (first=expression { args.add($first.ret); }
+	| 'const' '(' ((ID { $ret = new Const(new Deref($ID.text), null); })
+	| ({ List<Expr> args = new ArrayList<Expr>(); } ID '(' (first=expression { args.add($first.ret); }
 	(',' iter=expression { args.add($iter.ret); })*)? ')' { $ret = new Const(new Deref($ID.text), args); })) ')'
-	| 'deconst' '(' ID expression* ')'		 { $ret = new Deconst(new Deref($ID.text)); }
+	| 'deconst' '(' ID ('('')')? ')'		 { $ret = new Deconst(new Deref($ID.text)); }
 //arithmetic
-    | OPERATOR expression                    { $ret = new Modify($expression.ret, "-"); }
+    | OPERATOR expression                    { $ret = new Modify($expression.ret, $OPERATOR.text); }
     | x=expression OPERATOR y=expression     { $ret = new Arith($OPERATOR.text, $x.ret, $y.ret); }
     | '!' expression                         { $ret = new Invert($expression.ret); }
     | 'print' '(' condition ')'              { $ret = new Print($condition.ret); }
@@ -91,8 +90,8 @@ value returns [Expr ret]
 
 COMMENT : ('/*' .*? '*/' | '//' ~[\r\n]*) -> skip;
 
-MODIFIER: '++' | '--' | '/-';
-OPERATOR : '+' | '-' | '*' | '/' | '**' | '%' | MODIFIER;
+MODIFIER: '++' | '--';
+OPERATOR : '+' | '-' | '*' | '/''-'? | '**' | '%';
 CONDITION : '<' | '<=' | '>' | '>=' | '==' | '!=';
 ANDOR : '&&' | '||';
 

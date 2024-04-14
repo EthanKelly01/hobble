@@ -7,7 +7,7 @@ object None:Data() {
     override fun toString() = "None"
 }
 
-class IntData(val v:Int, ): Data() {
+class IntData(val v:Int): Data() {
     override fun toString() = "$v"
     fun toBool() = if (v > 0) BoolData(true) else BoolData(false)
     fun toFloat() = FloatData(v.toFloat())
