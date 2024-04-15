@@ -5,7 +5,7 @@ import backend.*;
 }
 
 //parser
-program returns [Expr ret] : scope { $ret = $scope.ret; } EOF;
+program returns [Expr ret] : scope { $ret = $scope.ret; System.out.println("------------------v Output v------------------"); } EOF;
 
 scope returns [Expr ret]
     : { List<Expr> statements = new ArrayList<Expr>(); }
@@ -23,10 +23,9 @@ statement returns [Expr ret]
     : assignment ';'?                         { $ret = $assignment.ret; }
     | expression ';'?                         { $ret = $expression.ret; }
 //if statements
-    | { Expr first; Expr second = new NoneExpr(); Expr cond = new BoolRandom(); } 'if''(' (condition { cond = $condition.ret; })? ')' ('{' scope '}' { first = $scope.ret; } | statement { first = $statement.ret; })
-    ('else' ('{' scope '}' { second = $scope.ret; } | statement { second = $statement.ret; }))? { $ret = new Check(cond, first, second); }
-//would statement
-    | { Expr first; Expr second = new NoneExpr(); Expr cond = new BoolRandom(); } 'would' ('{'scope'}' { first = $scope.ret; } | statement { first = $statement.ret; }) 'if' '(' (condition { cond = $condition.ret; })? ')'
+    | { Expr first; Expr second = new NoneExpr(); Expr cond = new BoolRandom(); }
+     ('if''(' (condition { cond = $condition.ret; })? ')' ('{' scope '}' { first = $scope.ret; } | statement { first = $statement.ret; })
+     | 'would' ('{'scope'}' { first = $scope.ret; } | statement { first = $statement.ret; }) 'if' '(' (condition { cond = $condition.ret; })? ')')
     ('else' ('{' scope '}' { second = $scope.ret; } | statement { second = $statement.ret; }))? { $ret = new Check(cond, first, second); }
 //function definitions
     | { List<String> args = new ArrayList<String>(); Expr body; } FUNCTION ID '(' (first=ID { args.add($first.text); } (',' iter=ID { args.add($iter.text); })*)? ')'

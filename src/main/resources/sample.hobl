@@ -1,5 +1,6 @@
 x=4;
 x+=2;
 print(x);
+a;rlkg'
 print("test");
 print("bruh");

@@ -15,7 +15,7 @@ private fun execute(source:String) {
             charPositionInLine: Int,
             msg: String?,
             e: RecognitionException?
-        ) { throw Exception("$e at line:${line}, char:${charPositionInLine}") }
+        ) { System.out.println("Error parsing at line ${line} char ${charPositionInLine}, attempting to continue.") }// { throw Exception("$e at line:${line}, char:${charPositionInLine}") }
     }
     val parser = hobbleParser(CommonTokenStream(hobbleLexer(readSampleFile(source)).apply {
         removeErrorListeners()
@@ -28,6 +28,4 @@ private fun execute(source:String) {
     } catch (e:Exception) { println("Error: $e") }
 }
 
-fun main() {
-    execute("sample.hobl")
-}
+fun main(args:Array<String>?) = if (args?.isNotEmpty() == true) execute(args[0]) else execute("sample.hobl")
