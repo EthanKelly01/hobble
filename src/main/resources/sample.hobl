@@ -1,6 +1,7 @@
-x=4;
-x+=2;
+//x = 4;
+//const x = 2;
+x = 8;
+x = 16;
+if (!x < 4 && x < 20) print(x++);
+x*=4;
 print(x);
-a;rlkg'
-print("test");
-print("bruh");
