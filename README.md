@@ -247,6 +247,21 @@ const hello("hi");
 hello("what"); //prints "hi"
 ```
 
-# Progress
+# Future features
+### Compound Data
+Arrays, lists, and a special new datatype called a `bus`.
 
+### Classes
+As expected.
+
+### Operator Overloading
+Manual setting of operators.
+
+### Please
+`please` keyword to run your code without checking safety. You know what you're doing.
+
+### Nevermind
+Undoes all operations of the current scope so far.
+
+# Progress
 Hobble is still in active development, watch this repo to keep up with it!
