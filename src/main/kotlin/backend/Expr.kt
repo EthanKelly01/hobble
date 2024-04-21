@@ -4,33 +4,18 @@ import java.util.*
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-abstract class Expr {
-    abstract fun eval(runtime:Runtime):Data
-}
-
-class NoneExpr: Expr() {
-    override fun eval(runtime:Runtime) = None
-}
-
-class IntLiteral(val lexeme:String):Expr() {
-    override fun eval(runtime:Runtime):Data = IntData(Integer.parseInt(lexeme))
-}
-
-class FloatLiteral(val lexeme:String):Expr() {
-    override fun eval(runtime:Runtime): Data = FloatData(lexeme.toFloat())
-}
-
+abstract class Expr { abstract fun eval(runtime:Runtime):Data }
+class NoneExpr: Expr() { override fun eval(runtime:Runtime) = None }
+class IntLiteral(val lexeme:String):Expr() { override fun eval(runtime:Runtime):Data = IntData(Integer.parseInt(lexeme)) }
+class FloatLiteral(val lexeme:String):Expr() { override fun eval(runtime:Runtime): Data = FloatData(lexeme.toFloat()) }
 class StringLiteral(val lexeme:String):Expr() {
-    override fun eval(runtime:Runtime):Data = if (lexeme != "" && lexeme[0] == '"' && lexeme[lexeme.length-1] == '"') StringData(lexeme.substring(1, lexeme.length-1)) else StringData(lexeme)
+    override fun eval(runtime:Runtime):Data = if (lexeme != "" && lexeme[0] == '"' && lexeme[lexeme.length-1] == '"')
+        StringData(lexeme.substring(1, lexeme.length-1)) else StringData(lexeme)
 }
-
 class BoolLiteral(val lexeme:String):Expr() {
     override fun eval(runtime: Runtime): Data = if (lexeme.uppercase() == "TRUE") BoolData(true) else BoolData(false)
 }
-
-class BoolRandom():Expr() {
-    override fun eval(runtime:Runtime):Data = BoolData(Random().nextBoolean())
-}
+class BoolRandom():Expr() { override fun eval(runtime:Runtime):Data = BoolData(Random().nextBoolean()) }
 
 //-------- Handling Variables --------
 
@@ -38,7 +23,7 @@ class Block(val exprs:List<Expr>, val flag:Boolean = false):Expr() {
     override fun eval(runtime:Runtime):Data {
         for (expr in exprs) {
             val data = expr.eval(runtime)
-            if (data is InterruptData) if (!flag || data.flag == 0) return data
+            if (data is InterruptData && (!flag || data.flag == Interrupts.RETURN)) return data
         }
         return None
     }
@@ -46,11 +31,7 @@ class Block(val exprs:List<Expr>, val flag:Boolean = false):Expr() {
 
 class Assign(val name:String, val expr:Expr):Expr() {
     override fun eval(runtime:Runtime):Data {
-        if ((runtime.symbolTable[name]?.isConst == true)) {
-            return None
-            //throw Exception("$name is const")
-        }
-        runtime.symbolTable.put(name, expr.eval(runtime))
+        if (runtime.symbolTable[name]?.isConst != true) runtime.symbolTable[name] = expr.eval(runtime)
         return runtime.symbolTable[name] ?: None
     }
 }
@@ -145,11 +126,8 @@ class Modify(val myVal:Expr, val op:String):Expr() {
 }
 
 class Check(val cond:Expr, val trueExpr:Expr, val falseExpr:Expr):Expr() {
-    override fun eval(runtime:Runtime):Data {
-        var result = cond.eval(runtime)
-        if (result is IntData) result = result.toBool()
-        return if(result is BoolData && result.v) trueExpr.eval(runtime) else falseExpr.eval(runtime)
-    }
+    override fun eval(runtime:Runtime):Data = if ((Normalize(cond).eval(runtime) as FloatData).toInt().toBool().v)
+        trueExpr.eval(runtime) else falseExpr.eval(runtime)
 }
 
 //-------- Loops --------
@@ -158,19 +136,13 @@ class Loop(val creation:Expr, val cond:Expr, val body:Expr, val iter:Expr, val d
     override fun eval(runtime:Runtime):Data {
         creation.eval(runtime)
         if (doo) body.eval(runtime)
-        var condition = cond.eval(runtime)
-        if (condition is ExprData) condition = condition.eval(runtime)
-        if (condition is BoolData && condition.v) while(true) {
+        while((Normalize(cond).eval(runtime) as FloatData).toInt().toBool().v) {
             val ret:Data = body.eval(runtime)
             if (ret is InterruptData) {
-                if (ret.flag == 0) return ret
-                if (ret.flag == 1) break
+                if (ret.flag == Interrupts.RETURN) return ret
+                if (ret.flag == Interrupts.BREAK) break
             }
-            val iteration = iter.eval(runtime)
-            if (iteration is ExprData) iteration.eval(runtime)
-            condition = cond.eval(runtime)
-            if (condition is ExprData) condition = condition.eval(runtime)
-            if (condition is BoolData && !condition.v) break
+            Normalize(iter).eval(runtime)
         }
         return None
     }
@@ -194,7 +166,7 @@ class RangeBuilder(val name:String, val first:Expr, val second:Expr, val body:Ex
 class FunDef(val name:String, val args:List<String>, val body:Expr):Expr() {
     override fun eval(runtime:Runtime):Data {
         runtime.symbolTable[name] = FuncData(name, args, body)
-        return None //do I want to return this? Probably later
+        return None
     }
 }
 
@@ -202,14 +174,13 @@ class FunCall(val name:String, val args:List<Expr>):Expr() {
     override fun eval(runtime:Runtime):Data {
         val f = runtime.symbolTable[name] ?: throw Exception("Function not found")
         if (f !is FuncData) throw Exception("$name is not a function")
-        val ret:Data;
-        if (f.isConst) ret = f.body.eval(runtime.copy(f.args.zip(f.constInstance!!.map { it.eval(runtime) }).toMap()))
+        val ret = if (f.isConst) f.body.eval(runtime.copy(f.args.zip(f.constInstance!!.map { it.eval(runtime) }).toMap()))
         else if (args.size != f.args.size) throw Exception("$name expects ${f.args.size} arguments, but ${args.size} given.")
-        else ret = f.body.eval(runtime.copy(f.args.zip(args.map { it.eval(runtime) }).toMap()))
+        else f.body.eval(runtime.copy(f.args.zip(args.map { it.eval(runtime) }).toMap()))
         return if (ret is InterruptData) ret.eval(runtime) else ret
     }
 }
 
-class Interrupt(val flag:Int = 0, val v: Expr = NoneExpr()):Expr() {
+class Interrupt(val flag:Interrupts = Interrupts.RETURN, val v: Expr = NoneExpr()):Expr() {
     override fun eval(runtime:Runtime):Data = InterruptData(flag, v)
 }

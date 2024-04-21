@@ -37,7 +37,13 @@ class ExprData(val v:Expr):Data() {
     fun eval(runtime:Runtime):Data = v.eval(runtime)
 }
 
-class InterruptData(val flag:Int, val v:Expr):Data() {
+enum class Interrupts {
+    RETURN,
+    BREAK,
+    CONTINUE
+}
+
+class InterruptData(val flag:Interrupts, val v:Expr):Data() {
     override fun toString() = "error/interrupt"
     fun eval(runtime:Runtime):Data = v.eval(runtime)
 }
