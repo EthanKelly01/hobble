@@ -66,20 +66,19 @@ class Print(val output:Expr):Expr() {
     }
 }
 
-class Const(val name:Expr, val args:List<Expr>?):Expr() {
+class Const(val name:String, val args:List<Expr>?):Expr() {
     override fun eval(runtime:Runtime):Data {
-        val v = name.eval(runtime)
+        val v = runtime.symbolTable[name]!!
         v.isConst = true
-        if (v is FuncData) {
-            v.const_instance = FuncCallData(v.name, args!!)
-        }
+        if (v is FuncData) if (args!!.size == v.args.size) v.constInstance = args
+        else throw Exception("$name expects ${v.args.size} arguments, but ${args.size} given.")
         return None
     }
 }
 
-class Deconst(val name:Expr):Expr() {
+class Deconst(val name:String):Expr() {
     override fun eval(runtime:Runtime):Data {
-        name.eval(runtime).isConst = false
+        runtime.symbolTable[name]!!.isConst = false
         return None
     }
 }
@@ -177,25 +176,16 @@ class Loop(val creation:Expr, val cond:Expr, val body:Expr, val iter:Expr, val d
     }
 }
 
-class RangeBuilder(val v:Expr, val first:Expr, val second:Expr):Expr() {
+class RangeBuilder(val name:String, val first:Expr, val second:Expr, val body:Expr, val doo:Boolean):Expr() {
     override fun eval(runtime:Runtime):Data {
         val x = Normalize(first).eval(runtime)
         val y = Normalize(second).eval(runtime)
-        if (x is FloatData && y is FloatData)
-            return ExprData(if (x.v <= y.v) Arith("<=", v, second) else Arith(">=", v, second))
-        println("Compiler error: Not a valid range! Switching to random.")
-        return ExprData(BoolRandom())
-    }
-}
-
-class IterBuilder(val name:String, val first: Expr, val second: Expr):Expr() {
-    override fun eval(runtime:Runtime):Data {
-        val x = Normalize(first).eval(runtime)
-        val y = Normalize(second).eval(runtime)
-        if (x is FloatData && y is FloatData)
-            return ExprData(if (x.v <= y.v) Assign(name, Modify(Deref(name), "++")) else Assign(name, Modify(Deref(name), "--")))
-        println("Compiler error: Not a valid range! Can't iterate.")
-        return None
+        if (x !is FloatData || y !is FloatData) {
+            println("Compiler error: Not a valid range, can't iterate.")
+            return None
+        }
+        return Loop(Assign(name, first), if (x.v <= y.v) Arith("<=", Deref(name), second) else Arith(">=", Deref(name), second),
+            body, if (x.v <= y.v) Assign(name, Modify(Deref(name), "++")) else Assign(name, Modify(Deref(name), "--")), doo).eval(runtime)
     }
 }
 
@@ -212,13 +202,10 @@ class FunCall(val name:String, val args:List<Expr>):Expr() {
     override fun eval(runtime:Runtime):Data {
         val f = runtime.symbolTable[name] ?: throw Exception("Function not found")
         if (f !is FuncData) throw Exception("$name is not a function")
-        if (f.isConst) { //check if function is const. if const, run the stored one instead
-            val ret = f.body.eval(runtime.copy(f.args.zip(f.const_instance!!.args.map { it.eval(runtime) }).toMap()))
-            return if (ret is InterruptData) ret.eval(runtime) else ret
-        }
-        if (args.size != f.args.size) throw Exception("$name expects ${f.args.size} arguments, but ${args.size} given.")
-
-        val ret = f.body.eval(runtime.copy(f.args.zip(args.map { it.eval(runtime) }).toMap()))
+        val ret:Data;
+        if (f.isConst) ret = f.body.eval(runtime.copy(f.args.zip(f.constInstance!!.map { it.eval(runtime) }).toMap()))
+        else if (args.size != f.args.size) throw Exception("$name expects ${f.args.size} arguments, but ${args.size} given.")
+        else ret = f.body.eval(runtime.copy(f.args.zip(args.map { it.eval(runtime) }).toMap()))
         return if (ret is InterruptData) ret.eval(runtime) else ret
     }
 }

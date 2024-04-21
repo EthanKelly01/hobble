@@ -1,7 +1,9 @@
-//x = 4;
-//const x = 2;
-x = 8;
-x = 16;
-if (!x < 4 && x < 20) print(x++);
-x*=4;
-print(x);
+x = 4;
+(x<10) {
+    print(x);
+    x++;
+}
+(x<20; x++) print(x);
+() print("test");
+(y=0;y<5;y++) print(y);
+(z in 5..0) print(z);

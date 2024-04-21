@@ -13,7 +13,7 @@ class IntData(val v:Int): Data() {
     fun toFloat() = FloatData(v.toFloat())
 }
 
-class FloatData(val v: Float): Data() {
+class FloatData(val v:Float): Data() {
     override fun toString() = if ("$v".takeLast(2) == ".0") v.toInt().toString() else "$v"
     fun toInt() = IntData(v.toInt())
 }
@@ -29,11 +29,7 @@ class BoolData(val v:Boolean): Data() {
 
 class FuncData(val name:String, val args:List<String>, val body:Expr): Data() {
     override fun toString() = "Function: $name ($args);"
-    var const_instance: FuncCallData? = null
-}
-
-class FuncCallData(val name:String, val args:List<Expr>): Data() {
-    override fun toString() = "Function: $name ($args)"
+    var constInstance:List<Expr>? = null
 }
 
 class ExprData(val v:Expr):Data() {
